@@ -37,8 +37,8 @@ services:
     ports:
       - "6379:6379"
 
-  opensearch-node:
-    image: opensearchproject/opensearch:latest
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.2
     restart: unless-stopped
 
     ulimits:
@@ -51,41 +51,49 @@ services:
 
     environment:
       bootstrap.memory_lock: true
-      node.name: opensearch-node
+      node.name: elastic-node
 
-      cluster.name: opensearch-cluster
-      cluster.initial_cluster_manager_nodes: opensearch-node
-      discovery.seed_hosts: opensearch-node
+      cluster.name: elastic-cluster
+      cluster.initial_master_nodes: elastic-node
 
-      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
-      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD:-Test42069!.?}
+      http.host: 0.0.0.0
+      transport.host: 0.0.0.0
+
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: true
+
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-test}
 
     volumes:
-      - opensearch-data:/usr/share/opensearch/data
+      - elasticsearch-data:/usr/share/elasticsearch/data
 
     ports:
       - 9200:9200
 
     networks:
-      - opensearch-net
+      - elk
 
-  opensearch-dashboard:
-    image: opensearchproject/opensearch-dashboards:latest
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.18.2
+    depends_on:
+      - elasticsearch
     
     environment:
-      OPENSEARCH_HOSTS: '["https://opensearch-node:9200"]'
-    
+      ELASTICSEARCH_HOST: "http://elasticsearch:9200"
+      TELEMETRY_ENABLED: false
+
     ports:
       - 5601:5601
 
     networks:
-      - opensearch-net
+      - elk
 
 volumes:
   postgresql-data:
   mongodb-data:
   redis-data:
-  opensearch-data:
+  elasticsearch-data:
 
 networks:
-  opensearch-net:
+  elk:
