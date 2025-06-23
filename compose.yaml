@@ -69,7 +69,7 @@ services:
     networks:
       - opensearch-net
 
-  opensearch-dashboards:
+  opensearch-dashboard:
     image: opensearchproject/opensearch-dashboards:latest
     
     environment:
