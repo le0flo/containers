@@ -1,0 +1,91 @@
+services:
+  postgresql:
+    image: postgres:latest
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${PSQL_USER:-test}
+      POSTGRES_PASSWORD: ${PSQL_PASSWORD:-test}
+
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"
+
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-test}
+        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-test}
+
+    volumes:
+      - mongodb-data:/data/db
+    
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+
+    volumes:
+      - redis-data:/data
+
+    ports:
+      - "6379:6379"
+
+  opensearch-node:
+    image: opensearchproject/opensearch:latest
+    restart: unless-stopped
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    environment:
+      bootstrap.memory_lock: true
+      node.name: opensearch-node
+
+      cluster.name: opensearch-cluster
+      cluster.initial_cluster_manager_nodes: opensearch-node
+      discovery.seed_hosts: opensearch-node
+
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD:-Test42069!.?}
+
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+    ports:
+      - 9200:9200
+
+    networks:
+      - opensearch-net
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch-node:9200"]'
+    
+    ports:
+      - 5601:5601
+
+    networks:
+      - opensearch-net
+
+volumes:
+  postgresql-data:
+  mongodb-data:
+  redis-data:
+  opensearch-data:
+
+networks:
+  opensearch-net:
