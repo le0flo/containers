@@ -1,5 +1,5 @@
 services:
-  postgresql:
+  psql:
     image: postgres:latest
     restart: unless-stopped
 
@@ -8,12 +8,12 @@ services:
       POSTGRES_PASSWORD: ${PSQL_PASSWORD:-test}
 
     volumes:
-      - postgresql-data:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql/data
 
     ports:
       - "5432:5432"
 
-  mongodb:
+  mongo:
     image: mongo:latest
     restart: unless-stopped
 
@@ -22,7 +22,7 @@ services:
         MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-test}
 
     volumes:
-      - mongodb-data:/data/db
+      - mongodb_data:/data/db
     
     ports:
       - "27017:27017"
@@ -32,13 +32,13 @@ services:
     restart: unless-stopped
 
     volumes:
-      - redis-data:/data
+      - redis_data:/data
 
     ports:
       - "6379:6379"
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.2
+  
+  os-node:
+    image: opensearchproject/opensearch:3.1.0
     restart: unless-stopped
 
     ulimits:
@@ -50,50 +50,43 @@ services:
         hard: 65536
 
     environment:
+      node.name: os-node
+      discovery.seed_hosts: os-node
+
+      cluster.name: os-cluster
+      cluster.initial_cluster_manager_nodes: os-node
+      
       bootstrap.memory_lock: true
-      node.name: elastic-node
 
-      cluster.name: elastic-cluster
-      cluster.initial_master_nodes: elastic-node
-
-      http.host: 0.0.0.0
-      transport.host: 0.0.0.0
-
-      xpack.security.enabled: false
-      xpack.security.enrollment.enabled: true
-
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-test}
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OS_PASSWORD:-Test42069!.?}
 
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
+      - opensearch_data:/usr/share/opensearch/data
 
     ports:
       - 9200:9200
 
     networks:
-      - elk
+      - opensearch_net
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.18.2
-    depends_on:
-      - elasticsearch
+  os-dash:
+    image: opensearchproject/opensearch-dashboards:3.1.0
     
     environment:
-      ELASTICSEARCH_HOST: "http://elasticsearch:9200"
-      TELEMETRY_ENABLED: false
-
+      OPENSEARCH_HOSTS: '["https://os-node:9200"]'
+    
     ports:
       - 5601:5601
 
     networks:
-      - elk
+      - opensearch_net
 
 volumes:
-  postgresql-data:
-  mongodb-data:
-  redis-data:
-  elasticsearch-data:
+  postgresql_data:
+  mongodb_data:
+  redis_data:
+  opensearch_data:
 
 networks:
-  elk:
+  opensearch_net:
