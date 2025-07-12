@@ -1,0 +1,17 @@
+services:
+  psql:
+    image: postgres:latest
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${PSQL_USER:-test}
+      POSTGRES_PASSWORD: ${PSQL_PASSWORD:-test}
+
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+
+    ports:
+      - 127.0.0.1:5432:5432/tcp
+
+volumes:
+  psql_data:

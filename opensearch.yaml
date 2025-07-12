@@ -1,0 +1,54 @@
+services:
+  os-node:
+    image: opensearchproject/opensearch:3.1.0
+    restart: unless-stopped
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    environment:
+      node.name: os-node
+      discovery.seed_hosts: os-node
+
+      cluster.name: os-cluster
+      cluster.initial_cluster_manager_nodes: os-node
+
+      bootstrap.memory_lock: true
+
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OS_PASSWORD:-Test42069!.?}
+
+    volumes:
+      - os_data:/usr/share/opensearch/data
+
+    ports:
+      - 127.0.0.1:9200:9200
+
+    networks:
+      - os_net
+
+  os-dash:
+    image: opensearchproject/opensearch-dashboards:3.1.0
+    restart: unless-stopped
+
+    environment:
+      data_importer.enabled: true
+
+      OPENSEARCH_HOSTS: '["https://os-node:9200"]'
+
+    ports:
+      - 127.0.0.1:5601:5601
+
+    networks:
+      - os_net
+
+volumes:
+  os_data:
+
+networks:
+  os_net:
