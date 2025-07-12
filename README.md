@@ -2,10 +2,11 @@
 
 ### Requirements
 
-- [Docker](https://docker.com)
+- [Docker compose](https://docs.docker.com/compose/)
 
 ### Usage
 
-- Run all containers with `docker compose up`
-- Run a single container with `docker compose up [container_name]`
-- Run in the background `docker compose up -d`
+```sh
+cd containers
+docker compose up # Runs all the services, use the -d flag to leave them in the background
+```
