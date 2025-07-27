@@ -1,0 +1,17 @@
+services:
+  mongo:
+    image: mongo:latest
+    restart: unless-stopped
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-test}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-test}
+
+    volumes:
+      - mongo_data:/data/db
+
+    ports:
+      - 127.0.0.1:27017:27017
+
+volumes:
+  mongo_data:
